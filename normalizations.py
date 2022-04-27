@@ -2,61 +2,146 @@ import numpy as np
 
 
 # linear normalization
-def linear_normalization(X, types):
-    ind_profit = np.where(types == 1)[0]
-    ind_cost = np.where(types == -1)[0]
-    x_norm = np.zeros(np.shape(X))
+def linear_normalization(matrix, types):
+    """
+    Normalize decision matrix using linear normalization method.
+    
+    Parameters
+    -----------
+        matrix : ndarray
+            Decision matrix with m alternatives in rows and n criteria in columns
+        types : ndarray
+            Criteria types. Profit criteria are represented by 1 and cost by -1.
 
-    x_norm[:, ind_profit] = X[:, ind_profit] / (np.amax(X[:, ind_profit], axis = 0))
-    x_norm[:, ind_cost] = np.amin(X[:, ind_cost], axis = 0) / X[:, ind_cost]
+    Returns
+    --------
+        ndarray
+            Normalized decision matrix
+
+    Examples
+    ----------
+    >>> nmatrix = linear_normalization(matrix, types)
+    """
+
+    x_norm = np.zeros(np.shape(matrix))
+    x_norm[:, types == 1] = matrix[:, types == 1] / (np.amax(matrix[:, types == 1], axis = 0))
+    x_norm[:, types == -1] = np.amin(matrix[:, types == -1], axis = 0) / matrix[:, types == -1]
     return x_norm
 
 
 # min-max normalization
-def minmax_normalization(X, types):
-    x_norm = np.zeros((X.shape[0], X.shape[1]))
-    ind_profit = np.where(types == 1)[0]
-    ind_cost = np.where(types == -1)[0]
+def minmax_normalization(matrix, types):
+    """
+    Normalize decision matrix using minimum-maximum normalization method.
 
-    x_norm[:, ind_profit] = (X[:, ind_profit] - np.amin(X[:, ind_profit], axis = 0)
-                             ) / (np.amax(X[:, ind_profit], axis = 0) - np.amin(X[:, ind_profit], axis = 0))
+    Parameters
+    -----------
+        matrix : ndarray
+            Decision matrix with m alternatives in rows and n criteria in columns
+        types : ndarray
+            Criteria types. Profit criteria are represented by 1 and cost by -1.
 
-    x_norm[:, ind_cost] = (np.amax(X[:, ind_cost], axis = 0) - X[:, ind_cost]
-                           ) / (np.amax(X[:, ind_cost], axis = 0) - np.amin(X[:, ind_cost], axis = 0))
+    Returns
+    --------
+        ndarray
+            Normalized decision matrix
+
+    Examples
+    ----------
+    >>> nmatrix = minmax_normalization(matrix, types)
+    """
+
+    x_norm = np.zeros((matrix.shape[0], matrix.shape[1]))
+    x_norm[:, types == 1] = (matrix[:, types == 1] - np.amin(matrix[:, types == 1], axis = 0)
+                             ) / (np.amax(matrix[:, types == 1], axis = 0) - np.amin(matrix[:, types == 1], axis = 0))
+
+    x_norm[:, types == -1] = (np.amax(matrix[:, types == -1], axis = 0) - matrix[:, types == -1]
+                           ) / (np.amax(matrix[:, types == -1], axis = 0) - np.amin(matrix[:, types == -1], axis = 0))
 
     return x_norm
 
 
 # max normalization
-def max_normalization(X, types):
-    maximes = np.amax(X, axis=0)
-    ind = np.where(types == -1)[0]
-    X = X/maximes
-    X[:,ind] = 1-X[:,ind]
-    return X
+def max_normalization(matrix, types):
+    """
+    Normalize decision matrix using maximum normalization method.
+
+    Parameters
+    -----------
+        matrix : ndarray
+            Decision matrix with m alternatives in rows and n criteria in columns
+        types : ndarray
+            Criteria types. Profit criteria are represented by 1 and cost by -1.
+
+    Returns
+    --------
+        ndarray
+            Normalized decision matrix
+
+    Examples
+    ----------
+    >>> nmatrix = max_normalization(matrix, types)
+    """
+
+    maximes = np.amax(matrix, axis = 0)
+    matrix = matrix / maximes
+    matrix[:, types == -1] = 1 - matrix[:, types == -1]
+    return matrix
 
 
 # sum normalization
-def sum_normalization(X, types):
-    x_norm = np.zeros((X.shape[0], X.shape[1]))
-    ind_profit = np.where(types == 1)[0]
-    ind_cost = np.where(types == -1)[0]
+def sum_normalization(matrix, types):
+    """
+    Normalize decision matrix using sum normalization method.
 
-    x_norm[:, ind_profit] = X[:, ind_profit] / np.sum(X[:, ind_profit], axis = 0)
+    Parameters
+    -----------
+        matrix : ndarray
+            Decision matrix with m alternatives in rows and n criteria in columns
+        types : ndarray
+            Criteria types. Profit criteria are represented by 1 and cost by -1.
 
-    x_norm[:, ind_cost] = (1 / X[:, ind_cost]) / np.sum((1 / X[:, ind_cost]), axis = 0)
+    Returns
+    --------
+        ndarray
+            Normalized decision matrix
+
+    Examples
+    ----------
+    >>> nmatrix = sum_normalization(matrix, types)
+    """
+
+    x_norm = np.zeros((matrix.shape[0], matrix.shape[1]))
+    x_norm[:, types == 1] = matrix[:, types == 1] / np.sum(matrix[:, types == 1], axis = 0)
+    x_norm[:, types == -1] = (1 / matrix[:, types == -1]) / np.sum((1 / matrix[:, types == -1]), axis = 0)
 
     return x_norm
 
 
 # vector normalization
-def vector_normalization(X, types):
-    x_norm = np.zeros((X.shape[0], X.shape[1]))
-    ind_profit = np.where(types == 1)[0]
-    ind_cost = np.where(types == -1)[0]
+def vector_normalization(matrix, types):
+    """
+    Normalize decision matrix using vector normalization method.
 
-    x_norm[:, ind_profit] = X[:, ind_profit] / (np.sum(X[:, ind_profit] ** 2, axis = 0))**(0.5)
+    Parameters
+    -----------
+        matrix : ndarray
+            Decision matrix with m alternatives in rows and n criteria in columns
+        types : ndarray
+            Criteria types. Profit criteria are represented by 1 and cost by -1.
 
-    x_norm[:, ind_cost] = 1 - (X[:, ind_cost] / (np.sum(X[:, ind_cost] ** 2, axis = 0))**(0.5))
+    Returns
+    --------
+        ndarray
+            Normalized decision matrix
+
+    Examples
+    -----------
+    >>> nmatrix = vector_normalization(matrix, types)
+    """
+
+    x_norm = np.zeros((matrix.shape[0], matrix.shape[1]))
+    x_norm[:, types == 1] = matrix[:, types == 1] / (np.sum(matrix[:, types == 1] ** 2, axis = 0))**(0.5)
+    x_norm[:, types == -1] = 1 - (matrix[:, types == -1] / (np.sum(matrix[:, types == -1] ** 2, axis = 0))**(0.5))
 
     return x_norm

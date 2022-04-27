@@ -1,54 +1,139 @@
+import itertools
 import numpy as np
 from correlations import pearson_coeff
 from normalizations import sum_normalization, minmax_normalization
 
 
 # equal weighting
-def equal_weighting(X):
-    N = np.shape(X)[1]
-    return np.ones(N) / N
+def equal_weighting(matrix):
+    """
+    Calculate criteria weights using objective Equal weighting method
 
+    Parameters
+    -----------
+        matrix : ndarray
+            Decision matrix with performance values of m alternatives and n criteria
 
-# entropy weighting
-def entropy_weighting(X):
-    # normalization for profit criteria
-    criteria_type = np.ones(np.shape(X)[1])
-    pij = sum_normalization(X, criteria_type)
-    m, n = np.shape(pij)
+    Returns
+    --------
+        ndarray
+            vector of criteria weights
 
-    H = np.zeros((m, n))
-    for j in range(n):
-        for i in range(m):
-            if pij[i, j] != 0:
-                H[i, j] = pij[i, j] * np.log(pij[i, j])
+    Examples
+    ----------
+    >>> weights = equal_weighting(matrix)
+    """
 
-    h = np.sum(H, axis = 0) * (-1 * ((np.log(m)) ** (-1)))
-    d = 1 - h
-    w = d / (np.sum(d))
-
+    N = np.shape(matrix)[1]
+    w = np.ones(N) / N
     return w
 
 
-# standard deviation weighting
-def std_weighting(X):
-    stdv = np.std(X, axis = 0)
-    return stdv / np.sum(stdv)
+# Entropy weighting
+def entropy_weighting(matrix):
+    """
+    Calculate criteria weights using objective Entropy weighting method
+
+    Parameters
+    -----------
+        matrix : ndarray
+            Decision matrix with performance values of m alternatives and n criteria
+
+    Returns
+    --------
+        ndarray
+            vector of criteria weights
+
+    Examples
+    ----------
+    >>> weights = entropy_weighting(matrix)
+    """
+
+    # normalize the decision matrix with sum_normalization method from normalizations as for profit criteria
+    types = np.ones(np.shape(matrix)[1])
+    pij = sum_normalization(matrix, types)
+    # Transform negative values in decision matrix `matrix` to positive values
+    pij = np.abs(pij)
+    m, n = np.shape(pij)
+    H = np.zeros((m, n))
+
+    # Calculate entropy
+    for j, i in itertools.product(range(n), range(m)):
+        if pij[i, j]:
+            H[i, j] = pij[i, j] * np.log(pij[i, j])
+
+    h = np.sum(H, axis = 0) * (-1 * ((np.log(m)) ** (-1)))
+
+    # Calculate degree of diversification
+    d = 1 - h
+
+    # Set w as the degree of importance of each criterion
+    w = d / (np.sum(d))
+    return w
+
+
+# Standard Deviation weighting
+def std_weighting(matrix):
+    """
+    Calculate criteria weights using objective Standard deviation weighting method
+
+    Parameters
+    -----------
+        matrix : ndarray
+            Decision matrix with performance values of m alternatives and n criteria
+            
+    Returns
+    --------
+        ndarray
+            vector of criteria weights
+
+    Examples
+    ----------
+    >>> weights = std_weighting(matrix)
+    """
+
+    # Calculate the standard deviation of each criterion in decision matrix
+    stdv = np.sqrt((np.sum(np.square(matrix - np.mean(matrix, axis = 0)), axis = 0)) / (matrix.shape[0]))
+    # Calculate criteria weights by dividing the standard deviations by their sum
+    w = stdv / np.sum(stdv)
+    return w
 
 
 # CRITIC weighting
-def critic_weighting(X):
-    # normalization for profit criteria
-    criteria_type = np.ones(np.shape(X)[1])
-    x_norm = minmax_normalization(X, criteria_type)
+def critic_weighting(matrix):
+    """
+    Calculate criteria weights using objective CRITIC weighting method
+
+    Parameters
+    -----------
+        matrix : ndarray
+            Decision matrix with performance values of m alternatives and n criteria
+            
+    Returns
+    --------
+        ndarray
+            vector of criteria weights
+
+    Examples
+    ----------
+    >>> weights = critic_weighting(matrix)
+    """
+    
+    # Normalize the decision matrix using Minimum-Maximum normalization minmax_normalization from normalizations as for profit criteria
+    types = np.ones(np.shape(matrix)[1])
+    x_norm = minmax_normalization(matrix, types)
+    # Calculate the standard deviation
     std = np.std(x_norm, axis = 0)
     n = np.shape(x_norm)[1]
+    # Calculate correlation coefficients of all pairs of columns of normalized decision matrix
     correlations = np.zeros((n, n))
-    for i in range(0, n):
-        for j in range(0, n):
-            correlations[i, j] = pearson_coeff(x_norm[:, i], x_norm[:, j])
+    for i, j in itertools.product(range(n), range(n)):
+        correlations[i, j] = pearson_coeff(x_norm[:, i], x_norm[:, j])
 
+    # Calculate the difference between 1 and calculated correlations
     difference = 1 - correlations
-    suma = np.sum(difference, axis = 0)
-    C = std * suma
-    w = C / (np.sum(C, axis = 0))
+    # Multiply the difference by the standard deviation
+    C = std * np.sum(difference, axis = 0)
+    # Calculate the weights by dividing vector with C by their sum
+    w = C / np.sum(C)
     return w
